@@ -70,6 +70,8 @@ import TrashOutlineIcon from '@/assets/icons/trash-outline.svg';
 import TrophyIcon from '@/assets/icons/trophy.svg';
 import UserIcon from '@/assets/icons/user.svg';
 import XMarkIcon from '@/assets/icons/x-mark.svg';
+import OssDownloadIcon from '@/assets/icons/oss-download.svg';
+import OssUploadIcon from '@/assets/icons/oss-upload.svg';
 
 export type IIconName =
     | 'alarm-outline'
@@ -140,7 +142,9 @@ export type IIconName =
     | 'trash-outline'
     | 'trophy'
     | 'user'
-    | 'x-mark';
+    | 'x-mark'
+    | 'oss-download'
+    | 'oss-upload';
 
 interface IProps extends SvgProps {
     /** 图标名称 */
@@ -219,6 +223,8 @@ const iconMap = {
     trophy: TrophyIcon,
     user: UserIcon,
     'x-mark': XMarkIcon,
+    'oss-download': OssDownloadIcon,
+    'oss-upload': OssUploadIcon,
 } as const;
 
 export default function Icon(props: IProps) {

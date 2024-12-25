@@ -1,0 +1,8 @@
+{
+  "name": "cos-wx-sdk-v5",
+  "version": "1.8.6",
+  "description": "react-native版本功能太少了,从cos-wx-sdk-v5取签名功能",
+ 
+  "main": "index.js",
+  "types": "index.d.ts"
+}

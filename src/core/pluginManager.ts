@@ -49,6 +49,7 @@ import Base64 from '@/utils/base64';
 import MediaCache from './mediaCache';
 import {produce} from 'immer';
 import objectPath from 'object-path';
+import Config from '@/core/config';
 
 axios.defaults.timeout = 2000;
 
@@ -353,6 +354,12 @@ class PluginMethods implements IPlugin.IPluginInstanceMethods {
                     mediaCache.userAgent ?? mediaCache.headers?.['user-agent'],
             };
         }
+
+        const ossRank = Config.get('setting.basic.ossRank') ?? false;
+        if(ossRank){
+            return {};
+        }
+
         // 3. 插件解析
         if (!this.plugin.instance.getMediaSource) {
             const {url, auth} = formatAuthUrl(

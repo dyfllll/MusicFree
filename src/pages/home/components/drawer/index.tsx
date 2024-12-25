@@ -16,6 +16,8 @@ import Divider from '@/components/base/divider';
 import TrackPlayer from '@/core/trackPlayer';
 import {checkUpdateAndShowResult} from '@/hooks/useCheckUpdate.ts';
 import {IIconName} from '@/components/base/icon.tsx';
+import ThemeSwitch from '@/components/base/switch';
+import Config, { IConfigPaths } from '@/core/config';
 
 const ITEM_HEIGHT = rpx(108);
 
@@ -77,6 +79,7 @@ function HomeDrawer(props: any) {
         });
     }
 
+    const configSetting = Config.useConfig('setting.basic');
     return (
         <>
             <PageBackground />
@@ -115,6 +118,45 @@ function HomeDrawer(props: any) {
                             fontWeight="bold">
                             其他
                         </ListItem.ListItemText>
+                    </ListItem>
+                    <ListItem
+                        withHorizontalPadding
+                        key="播放时下载"
+                        onPress={() => { }}>
+                        <ListItem.ListItemIcon
+                            icon="oss-download"
+                            width={rpx(48)}
+                        />
+                        <ListItem.Content title="播放时下载" />
+                        <ThemeSwitch value={configSetting?.playDownload} onValueChange={(b) => {
+                            Config.set("setting.basic.playDownload", b);
+                        }} />
+                    </ListItem>
+                    <ListItem
+                        withHorizontalPadding
+                        key="播放时备份"
+                        onPress={() => { }}>
+                        <ListItem.ListItemIcon
+                            icon="oss-upload"
+                            width={rpx(48)}
+                        />
+                        <ListItem.Content title="播放时备份" />
+                        <ThemeSwitch value={configSetting?.ossEnable} onValueChange={(b) => {
+                            Config.set("setting.basic.ossEnable", b);
+                        }} />
+                    </ListItem>
+                    <ListItem
+                        withHorizontalPadding
+                        key="优先使用备份"
+                        onPress={() => { }}>
+                        <ListItem.ListItemIcon
+                            icon="circle-stack"
+                            width={rpx(48)}
+                        />
+                        <ListItem.Content title="优先使用备份" />
+                        <ThemeSwitch value={configSetting?.ossRank} onValueChange={(b) => {
+                            Config.set("setting.basic.ossRank", b);
+                        }} />
                     </ListItem>
                     <CountDownItem />
                     {otherSetting.map(item => (

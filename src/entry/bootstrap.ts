@@ -26,6 +26,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import MusicSheet from '@/core/musicSheet';
 import NativeUtils from '@/native/utils';
 import {showDialog} from '@/components/dialogs/useDialog.ts';
+import ossUtil from '@/core/ossUtil';
 
 /** app加载前执行
  * 1. 检查权限
@@ -157,6 +158,9 @@ async function _bootstrap() {
     await LyricManager.setup();
 
     logger.mark('歌词初始化完成');
+
+    await ossUtil.setup();
+    logger.mark('oss初始化完成');
 
     extraMakeup();
     ErrorUtils.setGlobalHandler(error => {

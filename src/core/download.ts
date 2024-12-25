@@ -26,6 +26,7 @@ import {
     showDialog,
 } from '@/components/dialogs/useDialog';
 import {nanoid} from 'nanoid';
+import ossUtil from '@/core/ossUtil';
 
 /** 队列中的元素 */
 interface IDownloadMusicOptions {
@@ -155,6 +156,152 @@ function generateFilename(musicItem: IMusic.IMusicItem) {
 //   }
 //   return {};
 // }
+
+let isDownloadSource = false;
+async function downloadSource(musicItem: IMusic.IMusicItem, quality: IMusic.IQualityKey, url: string, needUpload: boolean) {
+    if (LocalMusicSheet.isLocalMusic(musicItem)) {
+        if (needUpload) {
+            if (await ossUtil.uploadS3File(musicItem,url)) {
+                Toast.success('备份本地文件完成');
+            }
+            else {
+                Toast.warn('备份本地文件失败');
+            }
+        }
+        return;
+    }
+
+
+    if (isDownloadSource) {
+        Toast.warn('正在下载备份中...');
+        return;
+    }
+    isDownloadSource = true;
+
+    let hasError = false;
+    let headers = musicItem.headers;
+    let extension = getExtensionName(url);
+    const extensionWithDot = `.${extension}`;
+    if (supportLocalMediaType.every(_ => _ !== extensionWithDot)) {
+        extension = 'mp3';
+    }
+    const filename = generateFilename(musicItem);
+    /** 目标下载地址 */
+    const cacheDownloadPath = addFileScheme(
+        getCacheDownloadPath(`${nanoid()}.${extension}`),
+    );
+    const targetDownloadPath = addFileScheme(
+        getDownloadPath(`${filename}.${extension}`),
+    );
+
+    const { promise, jobId } = downloadFile({
+        fromUrl: url ?? '',
+        toFile: cacheDownloadPath,
+        headers: headers,
+        background: true,
+        begin(res) {
+            // downloadingProgress = produce(downloadingProgress, _ => {
+            //     _[nextDownloadItem.filename] = {
+            //         progress: 0,
+            //         size: res.contentLength,
+            //     };
+            // });
+            // startNotifyProgress();
+            // console.log(`下载开始: size:${res.contentLength}`);
+        },
+        progress(res) {
+            // downloadingProgress = produce(downloadingProgress, _ => {
+            //     _[nextDownloadItem.filename] = {
+            //         progress: res.bytesWritten,
+            //         size: res.contentLength,
+            //     };
+            // });
+            // console.log(`下载中: ${res.bytesWritten}/${res.contentLength}`);
+        },
+    });
+
+
+    let folder = path.dirname(targetDownloadPath);
+    let folderExists = await exists(folder);
+
+    if (!folderExists) {
+        await mkdirR(folder);
+    }
+
+    try {
+        await promise;
+        await copyFile(cacheDownloadPath, targetDownloadPath);
+        /** 下载完成 */
+        LocalMusicSheet.addMusicDraft({
+            ...musicItem,
+            [internalSerializeKey]: {
+                localPath: targetDownloadPath,
+            },
+        });
+        MediaMeta.update(musicItem, {
+            downloaded: true,
+            localPath: targetDownloadPath,
+        });
+    } catch (e: any) {
+        console.log(e, 'downloaderror');
+        /** 下载出错 */
+        errorLog('下载失败', {
+            item: {
+                id: musicItem.id,
+                title: musicItem.title,
+                platform: musicItem.platform,
+                quality: quality,
+            },
+            reason: e?.message ?? e,
+            targetDownloadPath: targetDownloadPath,
+        });
+        hasError = true;
+    } finally {
+        await unlink(cacheDownloadPath);
+    }
+
+    if (downloadingMusicQueue.length === 0) {
+        LocalMusicSheet.saveLocalSheet();
+    }
+
+    let uploadResult = false;
+    if (!hasError && needUpload) {
+        uploadResult = await ossUtil.uploadS3File(musicItem,targetDownloadPath);
+    }
+
+    if (hasError) {
+        try {
+            const perm = await check(
+                PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
+            );
+            if (perm !== 'granted') {
+                Toast.warn('权限不足，请检查是否授予写入文件的权限');
+            } else {
+                throw new Error();
+            }
+        } catch {
+            if (getCurrentDialog()?.name !== 'SimpleDialog') {
+                showDialog('SimpleDialog', {
+                    title: '下载失败',
+                    content:
+                        '部分歌曲下载失败，如果无法下载请检查系统设置中是否授予完整文件读写权限；或者去【侧边栏-权限管理】中查看文件读写权限是否勾选',
+                    onOk: hideDialog,
+                });
+            }
+        }
+    } else {
+        if (needUpload)
+            if (uploadResult)
+                Toast.success('下载和备份完成');
+            else
+                Toast.warn('下载完成但备份失败');
+        else
+            Toast.success('播放下载完成');
+    }
+    // console.log(url);
+    isDownloadSource = false;
+}
+
 
 let maxDownload = 3;
 /** 队列下载*/
@@ -419,6 +566,7 @@ const Download = {
     useDownloadingMusic: downloadingQueueStateMapper.useMappedState,
     usePendingMusic: pendingMusicQueueStateMapper.useMappedState,
     useDownloadingProgress: downloadingProgressStateMapper.useMappedState,
+    downloadSource,
 };
 
 export default Download;

@@ -103,6 +103,35 @@ function useCacheSize() {
     return [cacheSize, refreshCacheSize] as const;
 }
 
+function createInput(
+    title: string,
+    key: IConfigPaths,
+    password: boolean = false,
+) {
+    let value = Config.get(key);
+    let inputTile = `输入${title}`;
+    let placeholder = value && !password ? (value as string) : inputTile;
+    let displayValue = value ? (value.toString()) : '无';
+    if (password && value) {
+        displayValue = '************';
+    }
+    return {
+        title: title,
+        right: <ThemeText style={styles.centerText}>{displayValue}</ThemeText>,
+        onPress() {
+            showPanel('SimpleInput', {
+                title: inputTile,
+                placeholder: placeholder,
+                onOk(text, closePanel) {
+                    Config.set(key, text);
+                    closePanel();
+                    Toast.success('设置成功');
+                },
+            });
+        },
+    };
+}
+
 export default function BasicSetting() {
     const basicSetting = Config.useConfig('setting.basic');
 
@@ -326,6 +355,36 @@ export default function BasicSetting() {
                         asc: '下载更高音质',
                         desc: '下载更低音质',
                     },
+                ),
+            ],
+        },
+        {
+            title: 'oss',
+            data: [
+                createSwitch(
+                    '是否开启播放并下载',
+                    'setting.basic.playDownload',
+                    basicSetting?.playDownload ?? false,
+                ),
+                createSwitch(
+                    '是否开启自动备份',
+                    'setting.basic.ossEnable',
+                    basicSetting?.ossEnable ?? false,
+                ),
+                createInput('ossSecretId', 'setting.basic.ossSecretId'),
+                createInput('ossSecretKey', 'setting.basic.ossSecretKey', true),
+                createInput('ossBucket', 'setting.basic.ossBucket'),
+                createInput('ossRegion', 'setting.basic.ossRegion'),
+
+                createInput('s3SecretId', 'setting.basic.s3SecretId'),
+                createInput('s3SecretKey', 'setting.basic.s3SecretKey', true),
+                createInput('s3Bucket', 'setting.basic.s3Bucket'),
+                createInput('s3EndpointLocal', 'setting.basic.s3EndpointLocal'),
+                createInput('s3EndpointServer', 'setting.basic.s3EndpointServer'),
+                createSwitch(
+                    'local模式',
+                    'setting.basic.s3Local',
+                    basicSetting?.s3Local ?? false,
                 ),
             ],
         },

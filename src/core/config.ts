@@ -63,6 +63,33 @@ interface IConfig {
             musicOrderInLocalSheet: SortType;
             // 自动换源
             tryChangeSourceWhenPlayFail: boolean;
+            //是否开启播放时下载
+            playDownload: boolean;
+            //优先使用oss数据
+            ossRank:boolean;
+            //是否开启oss自动备份
+            ossEnable: boolean;
+            //secretId
+            ossSecretId: string;
+            //secretKey
+            ossSecretKey: string;
+            //bucket
+            ossBucket: string;
+            //region
+            ossRegion: string;
+            //s3 secretId
+            s3SecretId: string;
+            //s3 secretKey
+            s3SecretKey: string;
+            //s3 s3Bucket
+            s3Bucket:string;
+            //s3 s3EndpointLocal
+            s3EndpointLocal:string;
+            //s3 s3EndpointServer
+            s3EndpointServer:string;
+            //s3 local
+            s3Local: boolean;
+
         };
         /** 歌词 */
         lyric: {

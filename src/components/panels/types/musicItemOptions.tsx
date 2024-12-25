@@ -29,6 +29,7 @@ import mediaCache from '@/core/mediaCache';
 import LyricManager from '@/core/lyricManager';
 import {IIconName} from '@/components/base/icon.tsx';
 import MusicSheet from '@/core/musicSheet';
+import ossUtil from '@/core/ossUtil';
 
 interface IMusicItemOptionsProps {
     /** 歌曲信息 */
@@ -162,6 +163,30 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
                         try {
                             await LocalMusicSheet.removeMusic(musicItem, true);
                             Toast.success('已删除本地下载');
+                        } catch (e: any) {
+                            Toast.warn(`删除失败 ${e?.message ?? e}`);
+                        }
+                    },
+                });
+                hidePanel();
+            },
+        },
+        {
+            icon: 'trash-outline',
+            title: '删除云端备份',
+            show: !!musicSheet,
+            onPress: () => {
+                showDialog('SimpleDialog', {
+                    title: '删除云端备份',
+                    content: '将会删除云端备份，确定继续吗？',
+                    async onOk() {
+                        try {
+                            // await LocalMusicSheet.removeMusic(musicItem, true);
+                            const{ result , msg }=await ossUtil.deleteS3File(musicItem);
+                            if(result)
+                                Toast.success('已删除云端备份');
+                            else
+                                Toast.warn('删除云端备份失败:'+msg);
                         } catch (e: any) {
                             Toast.warn(`删除失败 ${e?.message ?? e}`);
                         }

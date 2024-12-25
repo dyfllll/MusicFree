@@ -15,6 +15,9 @@ import IconButton from '@/components/base/iconButton';
 import {showPanel} from '@/components/panels/usePanel';
 import {localPluginPlatform} from '@/constants/commonConst';
 import MusicSheet from '@/core/musicSheet';
+import Config from '@/core/config';
+import backup from '@/core/backup';
+import ossUtil from '@/core/ossUtil';
 
 export default function Sheets() {
     const [index, setIndex] = useState(0);
@@ -23,6 +26,29 @@ export default function Sheets() {
 
     const allSheets = MusicSheet.useSheetsBase();
     const staredSheets = MusicSheet.useStarredSheets();
+    const backupConfig = Config.useConfig('setting.backup');
+
+    async function onBackupClick() {
+        try {
+            const jsonStr = backup.backup();
+            await ossUtil.uploadCosBackupFile(jsonStr);
+            Toast.success('备份成功~');
+        } catch (e) {
+            console.log(e);
+            Toast.warn(`备份失败 ${e}`);
+        }
+    }
+
+    async function onResumeClick() {
+        try {
+            const resumeData = await ossUtil.dowloadCosBackupFile();
+            backup.resume(resumeData, backupConfig?.resumeMode);
+            Toast.success('恢复成功~');
+        } catch (e) {
+            console.log(e);
+            Toast.warn(`恢复失败 ${e}`);
+        }
+    }
 
     const selectedTabTextStyle = useMemo(() => {
         return [
@@ -87,6 +113,37 @@ export default function Sheets() {
                     </ThemeText>
                 </TouchableWithoutFeedback>
                 <View style={styles.more}>
+                    <IconButton
+                        name="oss-upload"
+                        style={styles.newSheetButton}
+                        sizeType="normal"
+                        accessibilityLabel="备份"
+                        onPress={() => {
+                            showDialog('SimpleDialog', {
+                                title: '备份',
+                                content: `确定备份歌单吗?`,
+                                onOk: async () => {
+                                    await onBackupClick();
+                                },
+                            });
+                        }}
+                    />
+                    <IconButton
+                        name="oss-download"
+                        style={styles.newSheetButton}
+                        sizeType="normal"
+                        accessibilityLabel="恢复"
+                        onPress={() => {
+                            showDialog('SimpleDialog', {
+                                title: '恢复',
+                                content: `确定恢复歌单吗?`,
+                                onOk: async () => {
+                                    await onResumeClick();
+                                },
+                            });
+                        }}
+                    />
+
                     <IconButton
                         name="plus"
                         style={styles.newSheetButton}

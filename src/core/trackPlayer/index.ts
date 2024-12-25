@@ -47,6 +47,8 @@ import {errorLog, trace} from '@/utils/log';
 import PersistStatus from '../persistStatus';
 import {getCurrentDialog, showDialog} from '@/components/dialogs/useDialog';
 import getSimilarMusic from '@/utils/getSimilarMusic';
+import ossUtil from '@/core/ossUtil';
+import Download from '@/core/download';
 
 /** 当前播放 */
 const currentMusicStore = new GlobalState<IMusic.IMusicItem | null>(null);
@@ -552,6 +554,7 @@ const play = async (
         );
         // 5.3 插件返回音源
         let source: IPlugin.IMediaSourceResult | null = null;
+        let sourceQuality: IMusic.IQualityKey = 'standard';
         for (let quality of qualityOrder) {
             if (isCurrentMusic(musicItem)) {
                 source =
@@ -562,6 +565,7 @@ const play = async (
                 // 5.3.1 获取到真实源
                 if (source) {
                     setQuality(quality);
+                    sourceQuality = quality;
                     break;
                 }
             } else {
@@ -569,6 +573,55 @@ const play = async (
                 return;
             }
         }
+
+        let isOssPlatform = ossUtil.checkOssPlatform(musicItem)
+
+        const { ossExist, ossKeyPath } = await ossUtil.checkS3Exist(
+            musicItem
+        );
+
+        let useOss = false;
+        const ossRank = Config.get('setting.basic.ossRank') ?? false;
+
+        if(source && source.url){
+            if(source.url.startsWith("file:"))
+                useOss = false;
+            else
+                useOss = ossRank;                
+        }else{
+            if(ossExist)
+                useOss = true;
+            else
+                useOss = false;
+        }
+
+        //音乐源无效 oss存在使用oss地址
+        if (useOss) {
+            source = { url: await ossUtil.getS3Url(ossKeyPath) };
+        }
+
+        const enableUpload = Config.get('setting.basic.ossEnable');
+        const playDownload = Config.get('setting.basic.playDownload');
+      
+
+        let needDownload = false;
+        let needUpload = false;
+
+
+        if (playDownload)
+            needDownload = true;
+
+        //oss不存在而且有url,下载并上传
+        if (enableUpload && !isOssPlatform && !ossExist && source && source.url) {
+            needDownload = true;
+            needUpload = true;
+        }
+
+        //开启播放时下载
+        if (needDownload) {
+            Download.downloadSource(musicItem, sourceQuality, source?.url ?? "", needUpload);
+        }
+
 
         if (!isCurrentMusic(musicItem)) {
             return;
