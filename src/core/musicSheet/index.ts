@@ -185,6 +185,56 @@ async function addSheet(title: string) {
     return newId;
 }
 
+async function resumeOssSheets(
+    remoteSheets: IMusic.IMusicSheetItem[],
+    resumeMode: ResumeMode,
+) {
+    const getTitleId = (id: string) => id == "favorite" ? "我喜欢" : id;
+    const localSheets = getDefaultStore().get(musicSheetsBaseAtom);
+    let localSheetMap: Map<string, IMusic.IMusicSheetItemBase> = new Map<string, IMusic.IMusicSheetItemBase>();
+    localSheets.map(it => localSheetMap.set(it.title ?? getTitleId(it.id), it));
+    for (const remoteSheet of remoteSheets) {
+        const key = remoteSheet.title ?? getTitleId(remoteSheet.id);
+        if (localSheetMap.has(key)) {
+            let localSheet = localSheetMap.get(key) as IMusic.IMusicSheetItemBase;
+            let localList = musicListMap.get(localSheet.id)?.musicList || [];
+            let remoteList = remoteSheet.musicList;
+            let backupList: IMusic.IMusicItem[] = [];
+
+            let checkIndex = 0;
+            for (let i = 0; i < remoteList.length; i++) {
+                let remote = remoteList[i];
+                for (let j = checkIndex; j < localList.length; j++) {
+                    let local = localList[j];
+                    if (local.id == remote.id) {
+                        let temp = localList[checkIndex];
+                        localList[checkIndex] = local;
+                        localList[j] = temp;
+                        checkIndex++;
+                        break;
+                    }
+                }
+            }
+
+            for (let i = checkIndex; i < localList.length; i++) {
+                backupList.push(localList[i]);
+            }
+
+            if (backupList.length > 0) {
+                const backupSheetId = await addSheet(`${key}_backup`);
+                await addMusic(backupSheetId, backupList);
+            }
+
+            await removeMusic(localSheet.id, localList);
+            await addMusic(localSheet.id, remoteSheet.musicList);
+
+        } else {
+            const newSheet = await addSheet(remoteSheet.title || '');
+            await addMusic(newSheet, remoteSheet.musicList);
+        }
+    }
+}
+
 async function resumeSheets(
     sheets: IMusic.IMusicSheetItem[],
     resumeMode: ResumeMode,
@@ -559,6 +609,7 @@ const MusicSheet = {
     removeSheet,
     backupSheets,
     resumeSheets,
+    resumeOssSheets,
     removeMusicByIndex,
     removeMusic,
     starMusicSheet,

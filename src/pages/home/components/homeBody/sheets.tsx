@@ -42,7 +42,7 @@ export default function Sheets() {
     async function onResumeClick() {
         try {
             const resumeData = await ossUtil.dowloadCosBackupFile();
-            backup.resume(resumeData, backupConfig?.resumeMode);
+            await backup.resumeOSS(resumeData, backupConfig?.resumeMode);
             Toast.success('恢复成功~');
         } catch (e) {
             console.log(e);

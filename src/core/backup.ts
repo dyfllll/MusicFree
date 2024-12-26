@@ -70,8 +70,27 @@ async function resume(
     return Promise.all([...(resumePlugins ?? []), resumeMusicSheets]);
 }
 
+async function resumeOSS(
+    raw: string | Object,
+    resumeMode: ResumeMode = ResumeMode.Append,
+) {
+    let obj: IBackJson;
+    if (typeof raw === 'string') {
+        obj = JSON.parse(raw);
+    } else {
+        obj = raw as IBackJson;
+    }
+
+    const {plugins, musicSheets} = obj ?? {};
+
+    /** 恢复歌单 */
+    await  MusicSheet.resumeOssSheets(musicSheets, resumeMode); 
+}
+
+
 const Backup = {
     backup,
     resume,
+    resumeOSS,
 };
 export default Backup;
