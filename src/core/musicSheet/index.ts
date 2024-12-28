@@ -193,7 +193,8 @@ async function resumeOssSheets(
     const localSheets = getDefaultStore().get(musicSheetsBaseAtom);
     let localSheetMap: Map<string, IMusic.IMusicSheetItemBase> = new Map<string, IMusic.IMusicSheetItemBase>();
     localSheets.map(it => localSheetMap.set(it.title ?? getTitleId(it.id), it));
-    for (const remoteSheet of remoteSheets) {
+    for (let i = remoteSheets.length - 1; i >= 0; --i) {
+        const remoteSheet = remoteSheets[i];
         const key = remoteSheet.title ?? getTitleId(remoteSheet.id);
         if (localSheetMap.has(key)) {
             let localSheet = localSheetMap.get(key) as IMusic.IMusicSheetItemBase;
