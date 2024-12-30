@@ -103,6 +103,8 @@ export const enum SortType {
     Newest = 'time',
     // 按时间逆序
     Oldest = 'time-rev',
+    // 按播放次数
+    PlayCount = 'playCount',
 }
 
 export const enum ResumeMode {

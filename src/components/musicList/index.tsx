@@ -50,7 +50,7 @@ function getAPIUrl() {
 function getMusicItemKey(item: IMusic.IMusicItem) {
     return `${item.platform}-${item.id}`;
 }
-function getMusicItemPlayCount(item: IMusic.IMusicItem) {
+export function getMusicItemPlayCount(item: IMusic.IMusicItem) {
     const key = getMusicItemKey(item);
     return playCountStore[key];
 }

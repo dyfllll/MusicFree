@@ -63,6 +63,10 @@ export default function () {
                                         value: SortType.Oldest,
                                         label: '按收藏时间从旧到新排序',
                                     },
+                                    {
+                                        value: SortType.PlayCount,
+                                        label: '按播放次数从高到低排序',
+                                    },
                                 ],
                                 defaultSelected:
                                     MusicSheet.getSheetMeta(id, 'sort') ||
