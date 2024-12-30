@@ -20,6 +20,7 @@ interface IMusicItemProps {
     itemPaddingRight?: number;
     left?: () => JSX.Element;
     containerStyle?: StyleProp<ViewStyle>;
+    playCount?:number;
 }
 export default function MusicItem(props: IMusicItemProps) {
     const {
@@ -32,6 +33,7 @@ export default function MusicItem(props: IMusicItemProps) {
         showMoreIcon = true,
         left: Left,
         containerStyle,
+        playCount,
     } = props;
 
     return (
@@ -81,7 +83,7 @@ export default function MusicItem(props: IMusicItemProps) {
                             fontSize="description"
                             fontColor="textSecondary">
                             {musicItem.artist}
-                            {musicItem.album ? ` - ${musicItem.album}` : ''}
+                            {musicItem.album ? ` - ${musicItem.album}` : ''}{playCount?` -${playCount}次`:''}
                         </ThemeText>
                     </View>
                 }

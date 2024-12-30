@@ -85,10 +85,14 @@ interface IConfig {
             s3Bucket:string;
             //s3 s3EndpointLocal
             s3EndpointLocal:string;
-            //s3 s3EndpointServer
-            s3EndpointServer:string;
+            //s3 s3EndpointRemote
+            s3EndpointRemote:string;
+            //serverEndpointLocal
+            serverEndpointLocal:string;
+            //serverEndpointRemote
+            serverEndpointRemote:string;
             //s3 local
-            s3Local: boolean;
+            netLocal: boolean;
 
         };
         /** 歌词 */
