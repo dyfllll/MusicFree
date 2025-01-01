@@ -1,7 +1,7 @@
 import {SortType} from '@/constants/commonConst.ts';
 import {isSameMediaItem} from '@/utils/mediaItem.ts';
 import {createMediaIndexMap} from '@/utils/mediaIndexMap.ts';
-import {getMusicItemPlayCount} from '@/components/musicList';
+import ossUtil from "@/core/ossUtil";
 
 // Bug: localeCompare is slow sometimes https://github.com/facebook/hermes/issues/867
 const collator = new Intl.Collator('zh');
@@ -33,8 +33,8 @@ const compareTimeOldToNew = (a: IMusic.IMusicItem, b: IMusic.IMusicItem) => {
 };
 
 const comparePlayCount = (a: IMusic.IMusicItem, b: IMusic.IMusicItem) => {
-    const va = getMusicItemPlayCount(a) ?? 0;
-    const vb = getMusicItemPlayCount(b) ?? 0;
+    const va = ossUtil.getPlayCount(a) ?? 0;
+    const vb = ossUtil.getPlayCount(b) ?? 0;
     const stamp = vb-va;
     if (stamp === 0) {
         return (a.$sortIndex || 0) - (b.$sortIndex || 0);

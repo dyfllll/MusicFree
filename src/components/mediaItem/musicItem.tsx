@@ -83,7 +83,7 @@ export default function MusicItem(props: IMusicItemProps) {
                             fontSize="description"
                             fontColor="textSecondary">
                             {musicItem.artist}
-                            {musicItem.album ? ` - ${musicItem.album}` : ''}{playCount?` -${playCount}次`:''}
+                            {musicItem.album ? ` - ${musicItem.album}` : ''}{playCount?` - ${playCount}次`:''}
                         </ThemeText>
                     </View>
                 }

@@ -475,6 +475,122 @@ async function uploadCosBackupFile(backUp: string) {
 }
 
 
+let playCountStore: any = {};
+let playCountStoreVaild = false;
+let playCountAPIToken: string = "";
+let playCountStoreSheetId = "";
+
+function getAPIUrl() {
+    const local = Config.get("setting.basic.netLocal") ?? true;
+    let url;
+    if (local) {
+        url = Config.get("setting.basic.serverEndpointLocal") ?? "";
+    }
+    else {
+        url = Config.get("setting.basic.serverEndpointRemote") ?? "";
+    }
+    return url;
+}
+
+function getPlayCountKey(item: IMusic.IMusicItem) {
+    return `${item.platform}-${item.id}`;
+}
+function getPlayCount(item: IMusic.IMusicItem) {
+    const key = getPlayCountKey(item);
+    return playCountStore[key];
+}
+
+function setPlayCount(item: IMusic.IMusicItem) {
+    if (!playCountStoreVaild) {
+        return false;
+    }
+
+    const key = getPlayCountKey(item);
+    playCountStore[key] = (playCountStore[key] ?? 0) + 1;
+
+    fetch(`${getAPIUrl()}/music/setPlayCount`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': "application/json",
+            "Authorization": playCountAPIToken
+        },
+        body: JSON.stringify({ key: key })
+    }).catch(e => { console.log(e); });
+
+    return true;
+}
+
+async function fetchPlayCountData(musicList: IMusic.IMusicItem[]) {
+    try {
+        if (!playCountAPIToken) {
+            const tokenResult = await fetch(`${getAPIUrl()}/api/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': "application/json",
+                    "Authorization": playCountAPIToken
+                },
+                body: JSON.stringify({
+                    username: Config.get("setting.basic.s3SecretId"),
+                    password: Config.get("setting.basic.s3SecretKey")
+                })
+            });
+            playCountAPIToken = (await tokenResult.json()).token;
+        }
+
+        if (!playCountAPIToken)
+            throw new Error(`error token`);
+
+        // console.log(playCountAPIToken);
+
+        const response = await fetch(`${getAPIUrl()}/music/getPlayCountList`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': "application/json",
+                'Authorization': playCountAPIToken
+            },
+            body: JSON.stringify(musicList.map(it => getPlayCountKey(it)))
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        return result.data;
+    } catch (error: any) {
+        throw new Error(error);
+    } finally {
+    }
+}
+
+function setupPlayCountStore(musicSheet: IMusic.IMusicSheetItem | undefined, musicList: IMusic.IMusicItem[] | undefined) {
+    return new Promise<boolean>((resolve, reject) => {
+        if (musicSheet && musicList) {
+            if (playCountStoreSheetId != musicSheet.id) {
+                fetchPlayCountData(musicList)
+                    .then((data: any[]) => {
+                        data?.forEach((item: any) => {
+                            playCountStore[item.key] = item.count;
+                        });
+                        playCountStoreVaild = true;
+                        resolve(true);
+                    })
+                    .catch(e => {
+                        console.log(e);
+                        playCountStoreVaild = false;
+                        resolve(false);
+                    });
+                playCountStoreSheetId = musicSheet.id;
+            } else {
+                resolve(false);
+            }
+        } else {
+            playCountStoreVaild = false;
+            resolve(false);
+        }
+    });
+
+}
+
+
 
 
 export const ossUtil = {
@@ -489,6 +605,10 @@ export const ossUtil = {
 
     dowloadCosBackupFile,
     uploadCosBackupFile,
+
+    setupPlayCountStore,
+    getPlayCount,
+    setPlayCount,
 };
 
 export default ossUtil;

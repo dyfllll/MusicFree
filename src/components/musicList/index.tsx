@@ -10,6 +10,7 @@ import ListReachEnd from '../base/listReachEnd';
 import TrackPlayer from '@/core/trackPlayer';
 import Config from '@/core/config';
 import { useEffect, useState } from "react";
+import ossUtil from "@/core/ossUtil";
 
 interface IMusicListProps {
     /** 顶部 */
@@ -29,88 +30,6 @@ interface IMusicListProps {
     onEndReached?: () => void;
 }
 const ITEM_HEIGHT = rpx(120);
-
-let playCountStore: any = {};
-let playCountStoreVaild = false;
-let playCountAPIToken: string = "";
-let playCountStoreSheetId = "";
-
-function getAPIUrl() {
-    const local = Config.get("setting.basic.netLocal") ?? true;
-    let url;
-    if (local) {
-        url = Config.get("setting.basic.serverEndpointLocal") ?? "";
-    }
-    else {
-        url = Config.get("setting.basic.serverEndpointRemote") ?? "";
-    }
-    return url;
-}
-
-function getMusicItemKey(item: IMusic.IMusicItem) {
-    return `${item.platform}-${item.id}`;
-}
-export function getMusicItemPlayCount(item: IMusic.IMusicItem) {
-    const key = getMusicItemKey(item);
-    return playCountStore[key];
-}
-function setMusicItemPlay(item: IMusic.IMusicItem) {
-    if (!playCountStoreVaild) return false;
-    const key = getMusicItemKey(item);
-    playCountStore[key] = (playCountStore[key] ?? 0) + 1;
-
-    fetch(`${getAPIUrl()}/music/setPlayCount`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': "application/json",
-            "Authorization": playCountAPIToken
-        },
-        body: JSON.stringify({ key: key })
-    }).catch(e => { console.log(e); });
-    return true;
-}
-async function setupPlayCountStore(musicList: IMusic.IMusicItem[]) {
-    try {
-        if (!playCountAPIToken) {
-            const tokenResult = await fetch(`${getAPIUrl()}/api/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': "application/json",
-                    "Authorization": playCountAPIToken
-                },
-                body: JSON.stringify({
-                    username: Config.get("setting.basic.s3SecretId"),
-                    password: Config.get("setting.basic.s3SecretKey")
-                })
-            });
-            playCountAPIToken = (await tokenResult.json()).token;
-        }
-
-        if (!playCountAPIToken)
-            throw new Error(`error token`);
-
-        // console.log(playCountAPIToken);
-
-        const response = await fetch(`${getAPIUrl()}/music/getPlayCountList`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': "application/json",
-                'Authorization': playCountAPIToken
-            },
-            body: JSON.stringify(musicList.map(it => getMusicItemKey(it)))
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
-        playCountStore = result.data;
-        playCountStoreVaild = true;
-    } catch (error: any) {
-        playCountStoreVaild = false;
-        throw new Error(error);
-    } finally {
-    }
-}
 
 /** 音乐列表 */
 export default function MusicList(props: IMusicListProps) {
@@ -134,14 +53,9 @@ export default function MusicList(props: IMusicListProps) {
     const [extraData, setextraData] = useState({});
 
     useEffect(() => {
-        if (musicSheet && musicList && playCountStoreSheetId != musicSheet.id) {
-            setupPlayCountStore(musicList)
-                .then(_ => {
-                    setextraData({});
-                })
-                .catch(e => console.log(e));
-            playCountStoreSheetId = musicSheet.id;
-        }
+        ossUtil.setupPlayCountStore(musicSheet, musicList).then((refresh) => {
+            if (refresh) setextraData({});
+        });
     }, []);
 
     return (
@@ -173,11 +87,11 @@ export default function MusicList(props: IMusicListProps) {
                                     musicList ?? [musicItem],
                                 );
                             }
-                            if (setMusicItemPlay(musicItem))
+                            if (ossUtil.setPlayCount(musicItem))
                                 setextraData({});
                         }}
                         musicSheet={musicSheet}
-                        playCount={getMusicItemPlayCount(musicItem)}
+                        playCount={ossUtil.getPlayCount(musicItem)}
                     />
                 );
             }}
