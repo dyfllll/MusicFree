@@ -479,6 +479,7 @@ let playCountStore: any = {};
 let playCountStoreVaild = false;
 let playCountAPIToken: string = "";
 let playCountStoreSheetId = "";
+let playCountRefreshCallback = () => { };
 
 function getAPIUrl() {
     const local = Config.get("setting.basic.netLocal") ?? true;
@@ -507,6 +508,8 @@ function setPlayCount(item: IMusic.IMusicItem) {
 
     const key = getPlayCountKey(item);
     playCountStore[key] = (playCountStore[key] ?? 0) + 1;
+
+    playCountRefreshCallback();
 
     fetch(`${getAPIUrl()}/music/setPlayCount`, {
         method: 'POST',
@@ -561,33 +564,28 @@ async function fetchPlayCountData(musicList: IMusic.IMusicItem[]) {
     }
 }
 
-function setupPlayCountStore(musicSheet: IMusic.IMusicSheetItem | undefined, musicList: IMusic.IMusicItem[] | undefined) {
-    return new Promise<boolean>((resolve, reject) => {
-        if (musicSheet && musicList) {
-            if (playCountStoreSheetId != musicSheet.id) {
-                fetchPlayCountData(musicList)
-                    .then((data: any[]) => {
-                        data?.forEach((item: any) => {
-                            playCountStore[item.key] = item.count;
-                        });
-                        playCountStoreVaild = true;
-                        resolve(true);
-                    })
-                    .catch(e => {
-                        console.log(e);
-                        playCountStoreVaild = false;
-                        resolve(false);
+function setupPlayCountStore(musicSheet: IMusic.IMusicSheetItem | undefined, musicList: IMusic.IMusicItem[] | undefined, refreshCallback: () => void) {
+    if (musicSheet && musicList) {
+        if (playCountStoreSheetId != musicSheet.id) {
+            fetchPlayCountData(musicList)
+                .then((data: any[]) => {
+                    data?.forEach((item: any) => {
+                        playCountStore[item.key] = item.count;
                     });
-                playCountStoreSheetId = musicSheet.id;
-            } else {
-                resolve(false);
-            }
+                    playCountStoreVaild = true;
+                    refreshCallback();
+                })
+                .catch(e => {
+                    console.log(e);
+                    playCountStoreVaild = false;
+                });
+            playCountStoreSheetId = musicSheet.id;
         } else {
-            playCountStoreVaild = false;
-            resolve(false);
         }
-    });
-
+    } else {
+        playCountStoreVaild = false;
+    }
+    playCountRefreshCallback = refreshCallback;
 }
 
 

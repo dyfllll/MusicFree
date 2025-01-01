@@ -8,7 +8,6 @@ import {FlashList} from '@shopify/flash-list';
 import ListLoading from '../base/listLoading';
 import ListReachEnd from '../base/listReachEnd';
 import TrackPlayer from '@/core/trackPlayer';
-import Config from '@/core/config';
 import { useEffect, useState } from "react";
 import ossUtil from "@/core/ossUtil";
 
@@ -53,9 +52,7 @@ export default function MusicList(props: IMusicListProps) {
     const [extraData, setextraData] = useState({});
 
     useEffect(() => {
-        ossUtil.setupPlayCountStore(musicSheet, musicList).then((refresh) => {
-            if (refresh) setextraData({});
-        });
+        ossUtil.setupPlayCountStore(musicSheet, musicList, () => setextraData({}));
     }, []);
 
     return (
@@ -87,8 +84,6 @@ export default function MusicList(props: IMusicListProps) {
                                     musicList ?? [musicItem],
                                 );
                             }
-                            if (ossUtil.setPlayCount(musicItem))
-                                setextraData({});
                         }}
                         musicSheet={musicSheet}
                         playCount={ossUtil.getPlayCount(musicItem)}

@@ -626,6 +626,9 @@ const play = async (
         if (!isCurrentMusic(musicItem)) {
             return;
         }
+
+        ossUtil.setPlayCount(musicItem);
+
         if (!source) {
             // 如果有source
             if (musicItem.source) {
