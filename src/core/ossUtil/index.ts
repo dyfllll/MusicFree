@@ -1,15 +1,14 @@
 import 'react-native-url-polyfill/auto'; // 使 URL API 在 React Native 环境中工作
 import Config, { IConfigPaths } from '@/core/config';
-import cosUtil from './cos-wx-sdk-v5/cos-wx-sdk-v5.js';
 import { S3, GetObjectCommand, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import axios from 'axios';
 
-let getOssSecretId = () => Config.get('setting.basic.ossSecretId') ?? '';
-let getOssSecretKey = () => Config.get('setting.basic.ossSecretKey') ?? '';
-let getOssBucket = () => Config.get('setting.basic.ossBucket') ?? '';
-let getOssRegion = () => Config.get('setting.basic.ossRegion') ?? '';
-
+let oss: S3;
+let ossSecretId = "";
+let ossSecretKey = "";
+let ossBucket = "";
+let ossRegion = "";
 
 const ossPathData = 'data/320k';
 const ossPathBackup = 'music/backup/MusicFree/PlaylistBackup.json';
@@ -251,212 +250,41 @@ async function deleteS3File(musicItem: IMusic.IMusicItem) {
 
 
 
+function getCosObject() {
+    const secretId = Config.get('setting.basic.ossSecretId') ?? '';
+    const secretKey = Config.get('setting.basic.ossSecretKey') ?? '';
+    const bucket = Config.get("setting.basic.ossBucket") ?? "";
+    const region = Config.get("setting.basic.ossRegion") ?? "";
 
-//取oss签名地址
-async function getCosUrl(keyPath: string) {
-    const url = await new Promise<string>((resolve) => {
-        cosUtil.getObjectUrl({
-            SecretId: getOssSecretId(), SecretKey: getOssSecretKey(),
-            Bucket: getOssBucket(), Region: getOssRegion(), Key: keyPath, Method: "GET", Expires: "900"
-        },
-            (err, data) => {
-                if (err)
-                    console.log(err);
-                resolve(data.Url);
-            });
-    });
-    return url;
-}
+    let create = false;
+    create = create || oss == null;
+    create = create || ossSecretId != secretId;
+    create = create || ossSecretKey != secretKey;
+    create = create || ossRegion != region;
 
 
-async function putCosObject(cosPath: string, data: string | Uint8Array) {
-    try {
-        const ossSecretId = getOssSecretId();
-        const ossSecretKey = getOssSecretKey();
-        const ossBucket = getOssBucket();
-        const ossRegion = getOssRegion();
-        let url = cosUtil.getUrl({
-            bucket: ossBucket,
-            region: ossRegion,
-            object: cosPath,
-        });
-        let putBuffer: Uint8Array =
-            data instanceof Uint8Array
-                ? (data as Uint8Array)
-                : new TextEncoder().encode(data as string);
-
-        const headers = {
-            'Content-Type': 'application/octet-stream',
-            // "Content-MD5": md5,
-            'Content-Length': putBuffer.length.toString(),
-        };
-
-        let authput = cosUtil.getAuth({
-            SecretId: ossSecretId,
-
-            SecretKey: ossSecretKey,
-
-            Bucket: ossBucket,
-
-            Region: ossRegion,
-
-            Method: 'PUT',
-
-            Key: cosPath,
-            headers: headers,
-        });
-
-        headers["Authorization"] = authput;
-
-        const response = await fetch(url, {
-            method: 'PUT',
-            headers: headers,
-            body: putBuffer
-        });
-
-        if (response.ok) {
-            return true;
-        } else {
-            console.log(`Unexpected status code: ${response.status}`);
-            return false;
-        }
-    } catch (error) {
-        console.error('Unexpected error:', error);
-        return false;
-    }
-}
-
-async function headCosObject(cosPath: string) {
-    try {
-        const ossSecretId = getOssSecretId();
-        const ossSecretKey = getOssSecretKey();
-        const ossBucket = getOssBucket();
-        const ossRegion = getOssRegion();
-        let url = cosUtil.getUrl({
-            bucket: ossBucket,
-            region: ossRegion,
-            object: cosPath,
-        });
-
-        let auth = cosUtil.getAuth({
-            SecretId: ossSecretId,
-
-            SecretKey: ossSecretKey,
-
-            Bucket: ossBucket,
-
-            Region: ossRegion,
-
-            Method: 'HEAD',
-
-            Key: cosPath,
-        });
-        const response = await fetch(url, {
-            method: 'HEAD',
-            headers: {
-                "Authorization": auth as string,
+    if (create) {
+        const config = {
+            region: s3Region,
+            credentials: {
+                accessKeyId: secretId,
+                secretAccessKey: secretKey,
             },
-        });
-        if (response.ok) {
-            return true;
-        } else {
-            console.log(`Unexpected status code: ${response.status}`);
-            return false;
-        }
-    } catch (error) {
-        console.error('Unexpected error:', error);
-        return false;
+            endpoint: `https://cos.${region}.myqcloud.com`,
+            forcePathStyle: false,
+        };
+        oss = new S3(config);
     }
+
+    ossSecretId = secretId;
+    ossSecretKey = secretKey;
+    ossRegion = region;
+    ossBucket = bucket;
+
+    return oss;
 }
 
-async function getCosObject(cosPath: string) {
-    try {
-        const ossSecretId = getOssSecretId();
-        const ossSecretKey = getOssSecretKey();
-        const ossBucket = getOssBucket();
-        const ossRegion = getOssRegion();
-        let url = cosUtil.getUrl({
-            bucket: ossBucket,
-            region: ossRegion,
-            object: cosPath,
-        });
 
-        let auth = cosUtil.getAuth({
-            SecretId: ossSecretId,
-
-            SecretKey: ossSecretKey,
-
-            Bucket: ossBucket,
-
-            Region: ossRegion,
-
-            Method: 'GET',
-
-            Key: cosPath,
-        });
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                "Authorization": auth as string,
-            }
-        });
-        if (response.ok) {
-            return await response.text();
-        } else {
-            console.log(`Unexpected status code: ${response.status}`);
-            return null;
-        }
-    } catch (error) {
-        console.error('Unexpected error:', error);
-        return null;
-    }
-}
-
-async function deleteCosObject(cosPath: string) {
-    try {
-        const ossSecretId = getOssSecretId();
-        const ossSecretKey = getOssSecretKey();
-        const ossBucket = getOssBucket();
-        const ossRegion = getOssRegion();
-        let url = cosUtil.getUrl({
-            bucket: ossBucket,
-            region: ossRegion,
-            object: cosPath,
-        });
-
-        let auth = cosUtil.getAuth({
-            SecretId: ossSecretId,
-
-            SecretKey: ossSecretKey,
-
-            Bucket: ossBucket,
-
-            Region: ossRegion,
-
-            Method: 'DELETE',
-
-            Key: cosPath,
-        });
-
-        const response = await fetch(url, {
-            method: 'DELETE',
-            headers: {
-                "Authorization": auth as string,
-            }
-        });
-
-        if (response.ok) {
-            return true;
-        } else {
-            console.log(`Unexpected status code: ${response.status}`);
-            return false;
-        }
-    } catch (error) {
-        console.error('Unexpected error:', error);
-        return false;
-    }
-}
 
 
 
@@ -465,13 +293,27 @@ function getCosBackupKey() {
 }
 
 async function dowloadCosBackupFile() {
-    let url = await getCosUrl(getCosBackupKey());
-    const text = (await fetch(url)).text();
+    const client = getCosObject();
+    const command = new GetObjectCommand({
+        Bucket: ossBucket,
+        Key: getCosBackupKey(),
+    });
+    const s3Url = await getSignedUrl(client, command);
+    const text = (await fetch(s3Url)).text();
     return text;
 }
 
 async function uploadCosBackupFile(backUp: string) {
-    await putCosObject(getCosBackupKey(), backUp);
+    const client = getCosObject();
+    const command = new PutObjectCommand({
+        Bucket: ossBucket,
+        Key: getCosBackupKey(),
+    });
+    const s3Url = await getSignedUrl(client, command);
+    const response = await fetch(s3Url, {
+        method: 'PUT',
+        body: backUp
+    });
 }
 
 
@@ -537,7 +379,7 @@ async function fetchPlayCountData(musicList: IMusic.IMusicItem[]) {
                     password: Config.get("setting.basic.s3SecretKey")
                 })
             });
-            playCountAPIToken = (await tokenResult.json()).token;
+            playCountAPIToken = (await tokenResult.json()).data.token;
         }
 
         if (!playCountAPIToken)
