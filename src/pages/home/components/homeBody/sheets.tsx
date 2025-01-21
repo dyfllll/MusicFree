@@ -17,7 +17,6 @@ import {localPluginPlatform} from '@/constants/commonConst';
 import MusicSheet from '@/core/musicSheet';
 import Config from '@/core/config';
 import backup from '@/core/backup';
-import ossUtil from '@/core/ossUtil';
 
 export default function Sheets() {
     const [index, setIndex] = useState(0);
@@ -28,27 +27,7 @@ export default function Sheets() {
     const staredSheets = MusicSheet.useStarredSheets();
     const backupConfig = Config.useConfig('setting.backup');
 
-    async function onBackupClick() {
-        try {
-            const jsonStr = backup.backup();
-            await ossUtil.uploadCosBackupFile(jsonStr);
-            Toast.success('备份成功~');
-        } catch (e) {
-            console.log(e);
-            Toast.warn(`备份失败 ${e}`);
-        }
-    }
 
-    async function onResumeClick() {
-        try {
-            const resumeData = await ossUtil.dowloadCosBackupFile();
-            await backup.resumeOSS(resumeData, backupConfig?.resumeMode);
-            Toast.success('恢复成功~');
-        } catch (e) {
-            console.log(e);
-            Toast.warn(`恢复失败 ${e}`);
-        }
-    }
 
     const selectedTabTextStyle = useMemo(() => {
         return [
@@ -123,7 +102,7 @@ export default function Sheets() {
                                 title: '备份',
                                 content: `确定备份歌单吗?`,
                                 onOk: async () => {
-                                    await onBackupClick();
+                                    await backup.onBackup();
                                 },
                             });
                         }}
@@ -138,7 +117,7 @@ export default function Sheets() {
                                 title: '恢复',
                                 content: `确定恢复歌单吗?`,
                                 onOk: async () => {
-                                    await onResumeClick();
+                                    await backup.onResume();
                                 },
                             });
                         }}

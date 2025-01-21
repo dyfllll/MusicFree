@@ -374,7 +374,7 @@ export default function BasicSetting() {
                 createInput('ossSecretId', 'setting.basic.ossSecretId'),
                 createInput('ossSecretKey', 'setting.basic.ossSecretKey', true),
                 createInput('ossBucket', 'setting.basic.ossBucket'),
-                createInput('ossRegion', 'setting.basic.ossRegion'),
+                createInput('ossEndpoint', 'setting.basic.ossEndpoint'),
 
                 createInput('s3SecretId', 'setting.basic.s3SecretId'),
                 createInput('s3SecretKey', 'setting.basic.s3SecretKey', true),
@@ -383,6 +383,11 @@ export default function BasicSetting() {
                 createInput('s3EndpointRemote', 'setting.basic.s3EndpointRemote'),
                 createInput('serverEndpointLocal', 'setting.basic.serverEndpointLocal'),
                 createInput('serverEndpointRemote', 'setting.basic.serverEndpointRemote'),
+                createSwitch(
+                    '自动更新歌单',
+                    'setting.basic.ossAutoUpdate',
+                    basicSetting?.ossAutoUpdate ?? false,
+                ),
                 createSwitch(
                     'local模式',
                     'setting.basic.netLocal',

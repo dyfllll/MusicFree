@@ -8,7 +8,7 @@ let oss: S3;
 let ossSecretId = "";
 let ossSecretKey = "";
 let ossBucket = "";
-let ossRegion = "";
+let ossEndpoint = "";
 
 const ossPathData = 'data/320k';
 const ossPathBackup = 'music/backup/MusicFree/PlaylistBackup.json';
@@ -254,13 +254,13 @@ function getCosObject() {
     const secretId = Config.get('setting.basic.ossSecretId') ?? '';
     const secretKey = Config.get('setting.basic.ossSecretKey') ?? '';
     const bucket = Config.get("setting.basic.ossBucket") ?? "";
-    const region = Config.get("setting.basic.ossRegion") ?? "";
+    const endpoint = Config.get("setting.basic.ossEndpoint") ?? "";
 
     let create = false;
     create = create || oss == null;
     create = create || ossSecretId != secretId;
     create = create || ossSecretKey != secretKey;
-    create = create || ossRegion != region;
+    create = create || ossEndpoint != endpoint;
 
 
     if (create) {
@@ -270,7 +270,7 @@ function getCosObject() {
                 accessKeyId: secretId,
                 secretAccessKey: secretKey,
             },
-            endpoint: `https://cos.${region}.myqcloud.com`,
+            endpoint: endpoint,
             forcePathStyle: false,
         };
         oss = new S3(config);
@@ -278,7 +278,7 @@ function getCosObject() {
 
     ossSecretId = secretId;
     ossSecretKey = secretKey;
-    ossRegion = region;
+    ossEndpoint = endpoint;
     ossBucket = bucket;
 
     return oss;
@@ -292,6 +292,19 @@ function getCosBackupKey() {
     return `${ossPathBackup}`;
 }
 
+async function getCosBackupFileHash() {
+    const client = getCosObject();
+    const command = new HeadObjectCommand({
+        Bucket: ossBucket,
+        Key: getCosBackupKey(),
+    });
+    const s3Url = await getSignedUrl(client, command);
+    const response = await fetch(s3Url, {
+        method: 'HEAD'
+    });
+    return response.headers.get("ETag") ?? "";
+}
+
 async function dowloadCosBackupFile() {
     const client = getCosObject();
     const command = new GetObjectCommand({
@@ -299,8 +312,10 @@ async function dowloadCosBackupFile() {
         Key: getCosBackupKey(),
     });
     const s3Url = await getSignedUrl(client, command);
-    const text = (await fetch(s3Url)).text();
-    return text;
+    const response = await fetch(s3Url);
+    const hash = response.headers.get("ETag") ?? "";
+    const text = await response.text();
+    return { hash: hash, data: text };
 }
 
 async function uploadCosBackupFile(backUp: string) {
@@ -314,6 +329,7 @@ async function uploadCosBackupFile(backUp: string) {
         method: 'PUT',
         body: backUp
     });
+    return response.headers.get("ETag") ?? "";
 }
 
 
@@ -443,6 +459,7 @@ export const ossUtil = {
     uploadS3File,
     deleteS3File,
 
+    getCosBackupFileHash,
     dowloadCosBackupFile,
     uploadCosBackupFile,
 

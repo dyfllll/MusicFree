@@ -27,6 +27,7 @@ import MusicSheet from '@/core/musicSheet';
 import NativeUtils from '@/native/utils';
 import {showDialog} from '@/components/dialogs/useDialog.ts';
 import ossUtil from '@/core/ossUtil';
+import backup from '@/core/backup';
 
 /** app加载前执行
  * 1. 检查权限
@@ -161,6 +162,9 @@ async function _bootstrap() {
 
     await ossUtil.setup();
     logger.mark('oss初始化完成');
+
+    await backup.setup();
+    logger.mark('backup初始化完成');
 
     extraMakeup();
     ErrorUtils.setGlobalHandler(error => {

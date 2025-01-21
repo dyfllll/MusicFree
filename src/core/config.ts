@@ -75,8 +75,8 @@ interface IConfig {
             ossSecretKey: string;
             //bucket
             ossBucket: string;
-            //region
-            ossRegion: string;
+            //endpoint
+            ossEndpoint: string;
             //s3 secretId
             s3SecretId: string;
             //s3 secretKey
@@ -93,6 +93,10 @@ interface IConfig {
             serverEndpointRemote:string;
             //s3 local
             netLocal: boolean;
+            //auto update musicList
+            ossAutoUpdate: boolean;
+            //auto update hash
+            ossAutoUpdateHash: string;
 
         };
         /** 歌词 */

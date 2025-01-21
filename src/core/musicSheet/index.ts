@@ -189,15 +189,27 @@ async function resumeOssSheets(
     remoteSheets: IMusic.IMusicSheetItem[],
     resumeMode: ResumeMode,
 ) {
-    const getTitleId = (id: string) => id == "favorite" ? "我喜欢" : id;
+    const getTitleId = (id: string) => id == defaultSheet.id ? defaultSheet.title : id;
+    const getSheetKey = (sheet: IMusic.IMusicSheetItemBase) => sheet.title ?? getTitleId(sheet.id);
     const localSheets = getDefaultStore().get(musicSheetsBaseAtom);
-    let localSheetMap: Map<string, IMusic.IMusicSheetItemBase> = new Map<string, IMusic.IMusicSheetItemBase>();
-    localSheets.map(it => localSheetMap.set(it.title ?? getTitleId(it.id), it));
+
+    for (let i = 0; i < localSheets.length; i++) {
+        const localSheet = localSheets[i];
+        const key = getSheetKey(localSheet);
+        const remoteSheet = remoteSheets.find(e => getSheetKey(e) === key);
+        if (!remoteSheet && localSheet.id != defaultSheet.id &&
+            localSheet.title && !localSheet.title.endsWith("_backup")) {
+            await MusicSheet.updateMusicSheetBase(localSheet.id, {
+                title: `${key}_backup`,
+            })
+        }
+    }
+
     for (let i = remoteSheets.length - 1; i >= 0; --i) {
         const remoteSheet = remoteSheets[i];
-        const key = remoteSheet.title ?? getTitleId(remoteSheet.id);
-        if (localSheetMap.has(key)) {
-            let localSheet = localSheetMap.get(key) as IMusic.IMusicSheetItemBase;
+        const key = getSheetKey(remoteSheet);
+        const localSheet = localSheets.find(e => getSheetKey(e) === key);
+        if (localSheet) {
             let localList = musicListMap.get(localSheet.id)?.musicList || [];
             let remoteList = remoteSheet.musicList;
             let backupList: IMusic.IMusicItem[] = [];
