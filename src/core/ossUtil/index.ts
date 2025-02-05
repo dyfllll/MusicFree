@@ -3,6 +3,7 @@ import Config, { IConfigPaths } from '@/core/config';
 import { S3, GetObjectCommand, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import axios from 'axios';
+import pako from 'pako';
 
 let oss: S3;
 let ossSecretId = "";
@@ -11,7 +12,7 @@ let ossBucket = "";
 let ossEndpoint = "";
 
 const ossPathData = 'data/320k';
-const ossPathBackup = 'music/backup/MusicFree/PlaylistBackup.json';
+const ossPathBackup = "backup/MusicPlaylist.gz";
 
 export const ossPluginName = 'oss';
 export const ossPluginHash = 'oss';
@@ -314,20 +315,25 @@ async function dowloadCosBackupFile() {
     const s3Url = await getSignedUrl(client, command);
     const response = await fetch(s3Url);
     const hash = response.headers.get("ETag") ?? "";
-    const text = await response.text();
+    const text = pako.ungzip(await response.arrayBuffer(), { to: 'string' });
     return { hash: hash, data: text };
 }
 
 async function uploadCosBackupFile(backUp: string) {
+    const contentType = "application/octet-stream";
     const client = getCosObject();
     const command = new PutObjectCommand({
         Bucket: ossBucket,
         Key: getCosBackupKey(),
+        ContentType: contentType,
     });
     const s3Url = await getSignedUrl(client, command);
     const response = await fetch(s3Url, {
         method: 'PUT',
-        body: backUp
+        body: pako.gzip(backUp),
+        headers: {
+            'Content-Type': contentType
+        },
     });
     return response.headers.get("ETag") ?? "";
 }
