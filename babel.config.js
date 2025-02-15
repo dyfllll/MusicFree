@@ -11,6 +11,7 @@ module.exports = {
             },
         ],
         'react-native-reanimated/plugin',
+        ["@babel/plugin-transform-class-static-block", { loose: true }],
     ],
     env: {
         production: {

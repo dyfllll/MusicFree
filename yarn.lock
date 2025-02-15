@@ -83,7 +83,7 @@
     "@smithy/util-utf8" "^2.0.0"
     tslib "^2.6.2"
 
-"@aws-sdk/client-s3@^3.705.0":
+"@aws-sdk/client-s3@^3.749.0":
   version "3.749.0"
   resolved "https://registry.npmmirror.com/@aws-sdk/client-s3/-/client-s3-3.749.0.tgz#48d486b8baa87f20f2d3aceba82f947b3c95eef9"
   integrity sha512-Xi+DaBeYRIa2d+1QTAlBdbRIc9j3+H+H5aMbxIrlyIYE2NOz+4fhIgpUYuF4ln63p9Fby5Wh36DhHJYyN4uE0w==
@@ -486,7 +486,7 @@
     "@smithy/util-middleware" "^4.0.1"
     tslib "^2.6.2"
 
-"@aws-sdk/s3-request-presigner@^3.705.0":
+"@aws-sdk/s3-request-presigner@^3.749.0":
   version "3.749.0"
   resolved "https://registry.npmmirror.com/@aws-sdk/s3-request-presigner/-/s3-request-presigner-3.749.0.tgz#f5ff8e2bd2372ee40f2008c5cb5cf705547381f9"
   integrity sha512-ZUBBJvKGXNuLTsHymBjGsr6WoouRVojURouAc8ueePWxTCt0u/mOOP0KRFVfwmM166YMr+QWr/ym4bJ8aHLAkA==
