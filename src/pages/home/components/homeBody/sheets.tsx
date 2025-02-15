@@ -15,7 +15,6 @@ import IconButton from '@/components/base/iconButton';
 import {showPanel} from '@/components/panels/usePanel';
 import {localPluginPlatform} from '@/constants/commonConst';
 import MusicSheet from '@/core/musicSheet';
-import Config from '@/core/config';
 import backup from '@/core/backup';
 
 export default function Sheets() {
@@ -25,9 +24,6 @@ export default function Sheets() {
 
     const allSheets = MusicSheet.useSheetsBase();
     const staredSheets = MusicSheet.useStarredSheets();
-    const backupConfig = Config.useConfig('setting.backup');
-
-
 
     const selectedTabTextStyle = useMemo(() => {
         return [

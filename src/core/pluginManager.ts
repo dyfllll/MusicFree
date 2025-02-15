@@ -360,7 +360,7 @@ class PluginMethods implements IPlugin.IPluginInstanceMethods {
             };
         }
 
-        const ossRank = Config.get('setting.basic.ossRank') ?? false;
+        const ossRank = Config.getConfig('backup.ossRank') ?? false;
         if(ossRank){
             return {};
         }

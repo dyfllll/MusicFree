@@ -99,7 +99,7 @@ async function onBackup() {
     try {
         const jsonStr = backup();
         const hash = await ossUtil.uploadCosBackupFile(jsonStr);
-        Config.set("setting.basic.ossAutoUpdateHash", hash)
+        Config.setConfig("backup.ossAutoUpdateHash", hash)
         Toast.success('备份成功~');
     } catch (e) {
         console.log(e);
@@ -109,10 +109,10 @@ async function onBackup() {
 
 async function onResume() {
     try {
-        const resumeMode = Config.get("setting.backup.resumeMode");
+        const resumeMode = Config.getConfig("backup.resumeMode");
         const { hash, data } = await ossUtil.dowloadCosBackupFile();
         await resumeOSS(data, resumeMode);
-        Config.set("setting.basic.ossAutoUpdateHash", hash)
+        Config.setConfig("backup.ossAutoUpdateHash", hash)
         Toast.success('恢复成功~');
     } catch (e) {
         console.log(e);
@@ -122,16 +122,16 @@ async function onResume() {
 
 async function onUpdate() {
     try {
-        if (Config.get("setting.basic.ossAutoUpdate")) {
-            const resumeMode = Config.get("setting.backup.resumeMode");
+        if (Config.getConfig("backup.ossAutoUpdate")) {
+            const resumeMode = Config.getConfig("backup.resumeMode");
             const remoteHash = await ossUtil.getCosBackupFileHash();
-            const localHash = Config.get("setting.basic.ossAutoUpdateHash");
+            const localHash = Config.getConfig("backup.ossAutoUpdateHash");
             console.log("remoteHash:" + remoteHash);
             console.log("localHash:" + localHash);
             if (remoteHash != localHash) {
                 const { hash, data } = await ossUtil.dowloadCosBackupFile();
                 await resumeOSS(data, resumeMode);
-                Config.set("setting.basic.ossAutoUpdateHash", hash)
+                Config.setConfig("backup.ossAutoUpdateHash", hash)
                 Toast.success("自动更新歌单成功");
             }
         }

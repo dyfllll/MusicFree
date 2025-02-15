@@ -76,39 +76,39 @@ interface IConfig {
     "debug.devLog": boolean;
 
     //是否开启播放时下载
-    "setting.basic.playDownload": boolean;
+    "backup.playDownload": boolean;
     //优先使用oss数据
-    "setting.basic.ossRank":boolean;
+    "backup.ossRank":boolean;
     //是否开启oss自动备份
-    "setting.basic.ossEnable": boolean;
+    "backup.ossEnable": boolean;
     //secretId
-    "setting.basic.ossSecretId": string;
+    "backup.ossSecretId": string;
     //secretKey
-    "setting.basic.ossSecretKey": string;
+    "backup.ossSecretKey": string;
     //bucket
-    "setting.basic.ossBucket": string;
+    "backup.ossBucket": string;
     //endpoint
-    "setting.basic.ossEndpoint": string;
+    "backup.ossEndpoint": string;
     //s3 secretId
-    "setting.basic.s3SecretId": string;
+    "backup.s3SecretId": string;
     //s3 secretKey
-    "setting.basic.s3SecretKey": string;
+    "backup.s3SecretKey": string;
     //s3 s3Bucket
-    "setting.basic.s3Bucket":string;
+    "backup.s3Bucket":string;
     //s3 s3EndpointLocal
-    "setting.basic.s3EndpointLocal":string;
+    "backup.s3EndpointLocal":string;
     //s3 s3EndpointRemote
-    "setting.basic.s3EndpointRemote":string;
+    "backup.s3EndpointRemote":string;
     //serverEndpointLocal
-    "setting.basic.serverEndpointLocal":string;
+    "backup.serverEndpointLocal":string;
     //serverEndpointRemote
-    "setting.basic.serverEndpointRemote":string;
+    "backup.serverEndpointRemote":string;
     //s3 local
-    "setting.basic.netLocal": boolean;
+    "backup.netLocal": boolean;
     //auto update musicList
-    "setting.basic.ossAutoUpdate": boolean;
+    "backup.ossAutoUpdate": boolean;
     //auto update hash
-    "setting.basic.ossAutoUpdateHash": string;
+    "backup.ossAutoUpdateHash": string;
 }
 
 
@@ -193,6 +193,25 @@ async function migrateConfig(): Promise<void> {
         ['setting.webdav.url', 'webdav.url'],
         ['setting.webdav.username', 'webdav.username'],
         ['setting.webdav.password', 'webdav.password'],
+
+        //oss
+        ['setting.basic.playDownload', 'backup.playDownload'],
+        ['setting.basic.ossRank', 'backup.ossRank'],
+        ['setting.basic.ossEnable', 'backup.ossEnable'],
+        ['setting.basic.ossSecretId', 'backup.ossSecretId'],
+        ['setting.basic.ossSecretKey', 'backup.ossSecretKey'],
+        ['setting.basic.ossBucket', 'backup.ossBucket'],
+        ['setting.basic.ossEndpoint', 'backup.ossEndpoint'],
+        ['setting.basic.s3SecretId', 'backup.s3SecretId'],
+        ['setting.basic.s3SecretKey', 'backup.s3SecretKey'],
+        ['setting.basic.s3Bucket', 'backup.s3Bucket'],
+        ['setting.basic.s3EndpointLocal', 'backup.s3EndpointLocal'],
+        ['setting.basic.s3EndpointRemote', 'backup.s3EndpointRemote'],
+        ['setting.basic.serverEndpointLocal', 'backup.serverEndpointLocal'],
+        ['setting.basic.serverEndpointRemote', 'backup.serverEndpointRemote'],
+        ['setting.basic.netLocal', 'backup.netLocal'],
+        ['setting.basic.ossAutoUpdate', 'backup.ossAutoUpdate'],
+        ['setting.basic.ossAutoUpdateHash', 'backup.ossAutoUpdateHash'],
     ];
 
     // 执行迁移

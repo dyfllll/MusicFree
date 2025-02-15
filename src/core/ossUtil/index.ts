@@ -1,5 +1,5 @@
 import 'react-native-url-polyfill/auto'; // 使 URL API 在 React Native 环境中工作
-import Config, { IConfigPaths } from '@/core/config';
+import Config from '@/core/config';
 import { S3, GetObjectCommand, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import axios from 'axios';
@@ -38,7 +38,7 @@ async function setup() {
         local = false;
     }
     isSetup = true;
-    Config.set('setting.basic.netLocal', local);
+    Config.setConfig('backup.netLocal', local);
     console.log("use s3 url:" + (local ? s3EndpointLocal : s3EndpointRemote));
     console.log('oss setup');
 }
@@ -67,12 +67,12 @@ async function getLocalState() {
 }
 
 function getS3Object() {
-    const secretId = Config.get('setting.basic.s3SecretId') ?? '';
-    const secretKey = Config.get('setting.basic.s3SecretKey') ?? '';
-    const bucket = Config.get("setting.basic.s3Bucket") ?? "";
-    const endpointLocal = Config.get("setting.basic.s3EndpointLocal") ?? "";
-    const endpointRemote = Config.get("setting.basic.s3EndpointRemote") ?? "";
-    const local = isSetup ? Config.get("setting.basic.netLocal") ?? false : true;
+    const secretId = Config.getConfig('backup.s3SecretId') ?? '';
+    const secretKey = Config.getConfig('backup.s3SecretKey') ?? '';
+    const bucket = Config.getConfig("backup.s3Bucket") ?? "";
+    const endpointLocal = Config.getConfig("backup.s3EndpointLocal") ?? "";
+    const endpointRemote = Config.getConfig("backup.s3EndpointRemote") ?? "";
+    const local = isSetup ? Config.getConfig("backup.netLocal") ?? false : true;
 
     let create = false;
     create = create || s3Client == null;
@@ -252,10 +252,10 @@ async function deleteS3File(musicItem: IMusic.IMusicItem) {
 
 
 function getCosObject() {
-    const secretId = Config.get('setting.basic.ossSecretId') ?? '';
-    const secretKey = Config.get('setting.basic.ossSecretKey') ?? '';
-    const bucket = Config.get("setting.basic.ossBucket") ?? "";
-    const endpoint = Config.get("setting.basic.ossEndpoint") ?? "";
+    const secretId = Config.getConfig('backup.ossSecretId') ?? '';
+    const secretKey = Config.getConfig('backup.ossSecretKey') ?? '';
+    const bucket = Config.getConfig("backup.ossBucket") ?? "";
+    const endpoint = Config.getConfig("backup.ossEndpoint") ?? "";
 
     let create = false;
     create = create || oss == null;
@@ -346,13 +346,13 @@ let playCountStoreSheetId = "";
 let playCountRefreshCallback = () => { };
 
 function getAPIUrl() {
-    const local = Config.get("setting.basic.netLocal") ?? true;
+    const local = Config.getConfig("backup.netLocal") ?? true;
     let url;
     if (local) {
-        url = Config.get("setting.basic.serverEndpointLocal") ?? "";
+        url = Config.getConfig("backup.serverEndpointLocal") ?? "";
     }
     else {
-        url = Config.get("setting.basic.serverEndpointRemote") ?? "";
+        url = Config.getConfig("backup.serverEndpointRemote") ?? "";
     }
     return url;
 }
@@ -397,8 +397,8 @@ async function fetchPlayCountData(musicList: IMusic.IMusicItem[]) {
                     "Authorization": playCountAPIToken
                 },
                 body: JSON.stringify({
-                    username: Config.get("setting.basic.s3SecretId"),
-                    password: Config.get("setting.basic.s3SecretKey")
+                    username: Config.getConfig("backup.s3SecretId"),
+                    password: Config.getConfig("backup.s3SecretKey")
                 })
             });
             playCountAPIToken = (await tokenResult.json()).data.token;

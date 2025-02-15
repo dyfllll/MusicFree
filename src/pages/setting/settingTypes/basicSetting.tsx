@@ -104,10 +104,10 @@ function useCacheSize() {
 
 function createInput(
     title: string,
-    key: IConfigPaths,
+    key: ConfigKey,
     password: boolean = false,
 ) {
-    let value = Config.get(key);
+    const value = Config.useConfigValue(key);
     let inputTile = `输入${title}`;
     let placeholder = value && !password ? (value as string) : inputTile;
     let displayValue = value ? (value.toString()) : '无';
@@ -122,7 +122,7 @@ function createInput(
                 title: inputTile,
                 placeholder: placeholder,
                 onOk(text, closePanel) {
-                    Config.set(key, text);
+                    Config.setConfig(key, text);
                     closePanel();
                     Toast.success('设置成功');
                 },
@@ -158,6 +158,10 @@ export default function BasicSetting() {
     const musicOrderInLocalSheet = Config.useConfigValue('basic.musicOrderInLocalSheet');
     const tryChangeSourceWhenPlayFail = Config.useConfigValue('basic.tryChangeSourceWhenPlayFail');
 
+    const playDownload = Config.useConfigValue('backup.playDownload');
+    const ossEnable = Config.useConfigValue('backup.ossEnable');
+    const ossAutoUpdate = Config.useConfigValue('backup.ossAutoUpdate');
+    const netLocal = Config.useConfigValue('backup.netLocal');
 
     const debugEnableErrorLog = Config.useConfigValue('debug.errorLog');
     const debugEnableTraceLog = Config.useConfigValue('debug.traceLog');
@@ -391,35 +395,35 @@ export default function BasicSetting() {
             data: [
                 createSwitch(
                     '是否开启播放并下载',
-                    'setting.basic.playDownload',
-                    basicSetting?.playDownload ?? false,
+                    'backup.playDownload',
+                     playDownload ?? false,
                 ),
                 createSwitch(
                     '是否开启自动备份',
-                    'setting.basic.ossEnable',
-                    basicSetting?.ossEnable ?? false,
+                    'backup.ossEnable',
+                     ossEnable ?? false,
                 ),
-                createInput('ossSecretId', 'setting.basic.ossSecretId'),
-                createInput('ossSecretKey', 'setting.basic.ossSecretKey', true),
-                createInput('ossBucket', 'setting.basic.ossBucket'),
-                createInput('ossEndpoint', 'setting.basic.ossEndpoint'),
+                createInput('ossSecretId', 'backup.ossSecretId'),
+                createInput('ossSecretKey', 'backup.ossSecretKey', true),
+                createInput('ossBucket', 'backup.ossBucket'),
+                createInput('ossEndpoint', 'backup.ossEndpoint'),
 
-                createInput('s3SecretId', 'setting.basic.s3SecretId'),
-                createInput('s3SecretKey', 'setting.basic.s3SecretKey', true),
-                createInput('s3Bucket', 'setting.basic.s3Bucket'),
-                createInput('s3EndpointLocal', 'setting.basic.s3EndpointLocal'),
-                createInput('s3EndpointRemote', 'setting.basic.s3EndpointRemote'),
-                createInput('serverEndpointLocal', 'setting.basic.serverEndpointLocal'),
-                createInput('serverEndpointRemote', 'setting.basic.serverEndpointRemote'),
+                createInput('s3SecretId', 'backup.s3SecretId'),
+                createInput('s3SecretKey', 'backup.s3SecretKey', true),
+                createInput('s3Bucket', 'backup.s3Bucket'),
+                createInput('s3EndpointLocal', 'backup.s3EndpointLocal'),
+                createInput('s3EndpointRemote', 'backup.s3EndpointRemote'),
+                createInput('serverEndpointLocal', 'backup.serverEndpointLocal'),
+                createInput('serverEndpointRemote', 'backup.serverEndpointRemote'),
                 createSwitch(
                     '自动更新歌单',
-                    'setting.basic.ossAutoUpdate',
-                    basicSetting?.ossAutoUpdate ?? false,
+                    'backup.ossAutoUpdate',
+                     ossAutoUpdate ?? false,
                 ),
                 createSwitch(
                     'local模式',
-                    'setting.basic.netLocal',
-                    basicSetting?.netLocal ?? false,
+                    'backup.netLocal',
+                     netLocal ?? false,
                 ),
             ],
         },

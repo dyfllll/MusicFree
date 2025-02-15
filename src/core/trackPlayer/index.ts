@@ -568,7 +568,7 @@ const play = async (
         );
 
         let useOss = false;
-        const ossRank = Config.get('setting.basic.ossRank') ?? false;
+        const ossRank = Config.getConfig('backup.ossRank') ?? false;
 
         if(source && source.url){
             if(source.url.startsWith("file:"))
@@ -587,8 +587,8 @@ const play = async (
             source = { url: await ossUtil.getS3Url(ossKeyPath) };
         }
 
-        const enableUpload = Config.get('setting.basic.ossEnable');
-        const playDownload = Config.get('setting.basic.playDownload');
+        const enableUpload = Config.getConfig('backup.ossEnable');
+        const playDownload = Config.getConfig('backup.playDownload');
       
 
         let needDownload = false;
